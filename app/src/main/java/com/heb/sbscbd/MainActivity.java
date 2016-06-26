@@ -1,6 +1,7 @@
 package com.heb.sbscbd;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -11,15 +12,16 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.heb.sbscbd.model.Subscription;
+import com.heb.sbscbd.presenter.SubscriptionPresenter;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SubscriptionView {
 
     private RecyclerView subscriptionListView;
-    private RecyclerView.Adapter adapter;
-    private RecyclerView.LayoutManager layoutManager;
-    private List<String> currentSubscriptionList;
+    private SubscriptionPresenter presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,54 +31,31 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         subscriptionListView = (RecyclerView) findViewById(R.id.subscription_list_view);
-        layoutManager = new LinearLayoutManager(this);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         subscriptionListView.setLayoutManager(layoutManager);
 
-        List<String> subscriptionList = getCurrentSubscriptionList();
-        adapter = new SubscriptionItemAdapter(subscriptionList);
-        subscriptionListView.setAdapter(adapter);
+        presenter = new SubscriptionPresenter(this);
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                AddSubscriptionDialog dialog = new AddSubscriptionDialog();
+                dialog.show(getFragmentManager(), "add_subscription_dialog");
             }
         });
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        presenter.fetchSubscriptions();
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    public List<String> getCurrentSubscriptionList() {
-        List<String> currentSubscriptionList = new ArrayList<>();
-        currentSubscriptionList.add("CanardPc");
-        currentSubscriptionList.add("Mediapart");
-        currentSubscriptionList.add("Gamekult");
-        currentSubscriptionList.add("VinylClub");
-        currentSubscriptionList.add("OVH");
-        currentSubscriptionList.add("KimmSuffi");
-
-        return currentSubscriptionList;
+    public void displaySubscriptions(List<Subscription> subscriptions) {
+        RecyclerView.Adapter adapter = new SubscriptionItemAdapter(subscriptions);
+        subscriptionListView.setAdapter(adapter);
     }
 }
